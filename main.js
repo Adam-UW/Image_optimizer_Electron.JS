@@ -75,6 +75,17 @@ const menu = [
         // ]
         role: 'fileMenu', // @NOTE this replaces the code above!! how cool is that
     },
+    ...(isDev ? [
+        {
+            label: 'Developer',
+            submenu:[
+                {role: 'reload'},
+                {role: 'forcereload'},
+                {type: 'separator'},
+                {role: 'toggledevtools'},
+            ]
+        }
+    ] : []),
     ...(! isMac ? [ // Order is messed up So far
         {
             label: 'Help',
@@ -87,17 +98,6 @@ const menu = [
             ]
         }
     ] : []),
-    ...(isDev ? [
-        {
-            label: 'Developer',
-            submenu:[
-                {role: 'reload'},
-                {role: 'forcereload'},
-                {type: 'separator'},
-                {role: 'toggledevtools'},
-            ]
-        }
-    ] : [])
 ]
 
 // For mac user to show the file jMenu
