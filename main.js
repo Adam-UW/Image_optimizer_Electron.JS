@@ -1,4 +1,10 @@
-const {app, BrowserWindow, Menu, globalShortcut } = require('electron')
+const path = require('path')
+const os = require('os')
+const {app, BrowserWindow, Menu, globalShortcut, ipcMain, shell } = require('electron')
+const imagemin = require('imagemin')
+const imageminMozjpeg = require('imagemin-mozjpeg')
+const imageminPngquant = require('imagemin-pngquant')
+const slash = require('slash')
 // Set env
 process.env.NODE_ENV = 'development'
 //*{To check if the app is on Dev or on Production} 
@@ -13,12 +19,20 @@ let aboutWindow
 function createMainWindow(){
      mainWindow = new BrowserWindow({
         title: 'ImageShrink',
-        width: 500,
+        width: isDev ?800 : 500,
         height: 600,
         icon: `${__dirname}/assets/icons/Icon_256x256.png`,
         resizable: isDev,
-        backgroundColor: 'white'
+        backgroundColor: 'white',
+        webPreferences:{
+            nodeIntegration: true
+        }
     })
+
+    /** {To show the dev menu on Devlopment stage} */
+    if(isDev){
+        mainWindow.webContents.openDevTools()
+    }
 
     // mainWindow.loadURL(`file://${__dirname}/app/index.html`)
     mainWindow.loadFile('./app/index.html')
@@ -99,6 +113,38 @@ const menu = [
         }
     ] : []),
 ]
+
+ipcMain.on('image:minimize', (e, options)=>{
+    options.dest = path.join(os.homedir(), 'imageshrink')
+    shrinkImage(options)
+    console.log(options)
+})
+
+
+// Main shrinking is done here 
+async function shrinkImage ({imgPath, quality, dest}){
+    try {
+        const pngQuality = quality / 100
+        const files= await imagemin([slash(imgPath)], {
+            destination: dest,
+            plugins: [
+                imageminMozjpeg({quality}),
+                imageminPngquant({
+                    quality: [pngQuality, pngQuality]
+                })
+            ]
+        })
+
+        console.log(files)
+        shell.openPath(dest)
+    } catch (error) {
+        console.log(error)
+        
+    }
+
+}
+
+
 
 // For mac user to show the file jMenu
 if(isMac){
